@@ -16,6 +16,11 @@ mlruns/
 artifacts/
 artifacts_full/
 
+## MLflow database files
+mlflow.db
+mlflow.db-shm
+mlflow.db-wal
+
 ## Env / config files
 .env
 .venv/
