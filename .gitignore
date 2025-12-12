@@ -14,6 +14,7 @@ data/processed/
 ## MLflow runs and artifacts
 mlruns/
 artifacts/
+artifacts_full/
 
 ## Env / config files
 .env
