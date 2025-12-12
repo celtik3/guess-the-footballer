@@ -1,0 +1,25 @@
+## VS Code & Python caches
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+
+## Data (I can add specific data folders if needed)
+data/raw/
+data/processed/
+
+## MLflow runs and artifacts
+mlruns/
+artifacts/
+
+## Env / config files
+.env
+.venv/
+.env.local
+
+## OS junk
+.DS_Store
+Thumbs.db
