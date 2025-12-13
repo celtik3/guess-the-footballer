@@ -1,4 +1,3 @@
-import random
 from typing import Dict, Any
 
 from src.game.dataset import (
@@ -21,7 +20,7 @@ class GameEngine:
     Simple in-memory game engine for 'Guess the Footballer'.
 
     This version:
-      - Uses the mini dataset
+      - Uses the full processed dataset
       - Picks a random target player
       - Accepts guesses by name
       - Returns similarity and a simple text hint
@@ -95,35 +94,16 @@ class GameEngine:
 
         ## Simple handcrafted feedback for now in the simple game version.
         if correct:
-            # feedback = f"Correct! It was indeed {target_row['name']}."
             game_over = True
             ## Resetting the target so user must start a new game.
             self.target_player_id = None
         else:
             game_over = False
-            ## Building a small hint string using similarity and categorical overlaps.
-            # parts = []
-            # if same_position:
-            #     parts.append("same position group")
-            # if same_league:
-            #     parts.append("same league region")
-
-            # if parts:
-            #     overlap_text = " and ".join(parts)
-            #     feedback = (
-            #         f"Not quite. But your guess is {overlap_text}. "
-            #         f"Cosine similarity --> {sim['cosine_sim']:.2f}."
-            #     )
-            # else:
-            #     feedback = (
-            #         f"Not correct, and not very close based on position/league. "
-            #         f"Cosine similarity --> {sim['cosine_sim']:.2f}."
-            #     )
 
         ## Building context for the host stub
         feedback_context = {
             "correct": correct,
-            "guessed_name": guessed_row["name"],
+            "guessed_name": guessed_row["player_name"],
             "same_position": same_position,
             "same_league": same_league,
             "cosine_sim": sim.get("cosine_sim"),
@@ -131,11 +111,10 @@ class GameEngine:
         }
         feedback = generate_guess_feedback(feedback_context)
 
-
         return {
             "correct": correct,
             "game_over": game_over,
-            "guessed_name": guessed_row["name"],
+            "guessed_name": guessed_row["player_name"],
             "target_player_id": self.target_player_id if correct else None,
             ## The game won't reveal the name unless correct.
             "same_league_region": same_league,
@@ -144,40 +123,19 @@ class GameEngine:
             "feedback": feedback,
         }
     
-    # def get_basic_clue(self):
-    #     """
-    #     Return a simple text clue about the current target player.
-    #     This is a placeholder for the future LLM-based clue system.
-    #     """
-    #     if self.target_player_id is None:
-    #         return {"error": "No active game. Call new_game() first."}
-
-    #     target_row = self._get_target_row()
-
-    #     ## Building a simple clue string from structured fields.
-    #     position = target_row["position_group"]
-    #     league_region = target_row["league_region"]
-    #     nation_region = target_row["nation_region"]
-    #     style = target_row["style"]
-    #     peak_year = target_row["peak_year"]
-
-    #     clue = (
-    #         f"He is a {position.lower()} who played in {league_region} leagues, "
-    #         f"from the {nation_region} region, known as a {style.lower()}, "
-    #         f"with peak year around {int(peak_year)}."
-    #     )
-
-    #     return {"clue": clue}
 
     def get_basic_clue(self):
         """
         Return a progressive clue about the current target player using the LLM-like host stub.
 
         Each time this method is called during a game, I advance the clue_step:
-          step 1: very general (position + league region)
-          step 2: add nation/region
-          step 3: add style
-          step 4+: add peak year + value
+          step 1: very general (position)
+          step 2: add league region
+          step 3: add naton region
+          step 4: add nationality
+          step 5: add style
+          step 6: add peak year + value
+          step 7: add club name
         """
         if self.target_player_id is None:
             return {"error": "No active game. Call new_game() first."}
@@ -189,9 +147,11 @@ class GameEngine:
             "position_group": target_row["position_group"],
             "league_region": target_row["league_region"],
             "nation_region": target_row["nation_region"],
+            "nationality": target_row.get("nationality", "Unknown"),
             "style": target_row["style"],
             "peak_year": int(target_row["peak_year"]),
             "value_bin": target_row["value_bin"],
+            "current_club_name": target_row.get("current_club_name", "Unknown Club"),
         }
 
         ## Advance clue step for this game.

@@ -28,47 +28,64 @@ def generate_clue(facts: Dict[str, Any], step: int) -> str:
             pass
 
     ## Stub implementation with progressive clues
-    position = str(facts.get("position_group", "player")).lower()
+    position = str(facts.get("position_group", "player"))
     league_region = facts.get("league_region", "Europe")
     nation_region = facts.get("nation_region", "Europe")
-    style = str(facts.get("style", "all-rounder")).lower()
+    nationality = facts.get("nationality", "Unknown")
+    style = str(facts.get("style", "all-rounder"))
     peak_year = facts.get("peak_year", "recent years")
     value_bin = facts.get("value_bin", "High")
+    club = facts.get("current_club_name", "Unknown Club")
 
     ## Clamp step so I don't go beyond our designed levels.
-    if step < 1:
-        step = 1
-    if step > 4:
-        step = 4
+    step = max(1, min(step, 7))
 
-    ## Level 1 --> very general (position + league region only)
+    ## Level 1 --> very general, only position.
     if step == 1:
         templates = [
-            "He is a {position} who made his name in {league_region} leagues.",
-            "Think of a {position} currently associated with {league_region} football.",
+            f"The player is a {position}.",
+            f"You're looking for a {position}.",
         ]
 
-    ## Level 2 --> add origin region (nation_region)
+    ## Level 2 --> revealing league region.
     elif step == 2:
         templates = [
-            "He is a {position} from the {nation_region} region, playing in {league_region} leagues.",
-            "A {position} from the {nation_region} region who has been active in {league_region}.",
+            f"He plays his football in {league_region}.",
+            f"This {position} is active in {league_region} leagues.",
         ]
 
-    ## Level 3 --> add style / role
+    ## Level 3 --> adding nation region.
     elif step == 3:
         templates = [
-            "He is a {style} {position} from the {nation_region} region, active in {league_region} leagues.",
-            "Think of a {style} {position} from {nation_region} who plays in {league_region}.",
+            f"He comes from the {nation_region} region.",
+            f"The player originates from {nation_region}.",
         ]
 
-    ## Level 4 --> add peak year + value band (most specific)
-    else:  
+    # Level 4 --> adding nationality.
+    elif step == 4:
         templates = [
-            "He is a {style} {position} from the {nation_region} region in {league_region} leagues, "
-            "who peaked around {peak_year} and has a roughly {value_bin} market value.",
-            "A {style} {position} from {nation_region} in {league_region}, "
-            "considered around the {value_bin} value tier at his peak near {peak_year}.",
+            f"Well, his nationality is {nationality}.",
+        ]
+
+    ## Level 5 --> adding his style.
+    elif step == 5:
+        templates = [
+            f"On the pitch, he is known as a {style}.",
+            f"His playing style can be described as {style}.",
+        ]
+
+    ## Level 6 --> peak year and value band
+    elif step == 6:
+        templates = [
+            f"He reached his peak around {peak_year} and sits in the {value_bin} market value tier.",
+            f"His market value peaked near {peak_year}, placing him in the {value_bin} range.",
+        ]
+
+    ## Level 7 --> last clue as current club.
+    else:
+        templates = [
+            f"Final clue, he currently plays for {club}.",
+            f"Last hint is his club, he plays for {club}.",
         ]
 
     template = random.choice(templates)
@@ -79,6 +96,7 @@ def generate_clue(facts: Dict[str, Any], step: int) -> str:
         style=style,
         peak_year=peak_year,
         value_bin=value_bin,
+        club=club,
     )
 
     return clue
@@ -120,8 +138,8 @@ def generate_guess_feedback(context: Dict[str, Any]) -> str:
     ## If correct, being enthusiastic and closing the loop.
     if correct:
         templates = [
-            f"✅ Spot on! It was indeed {name}. Great job.",
-            f"🎉 Correct! {name} was the player I had in mind.",
+            f"Spot on! It was indeed {name}. Great job.",
+            f"Correct! {name} was the player I had in mind.",
             f"Nice one! You guessed {name} correctly.",
         ]
         return random.choice(templates)
@@ -161,7 +179,7 @@ def generate_guess_feedback(context: Dict[str, Any]) -> str:
 
     ## Combining everything into one friendly sentence.
     parts = [
-        f"❌ Not {name}.",
+        f"Not {name}.",
         overlap_sentence,
         warmth,
         f"We're still {tone}. Try another player!"

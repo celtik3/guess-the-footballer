@@ -22,9 +22,9 @@ def start_new_game(chat_history):
         resp = requests.post(f"{API_BASE}/new_game")
         resp.raise_for_status()
         data = resp.json()
-        msg = f"🎮 {data['message']} (Players in pool: {data['num_players']})"
+        msg = f"{data['message']} (Players in pool: {data['num_players']})"
     except Exception as e:
-        msg = f"⚠️ Error starting new game: {e}"
+        msg = f"Error starting new game: {e}"
 
     chat_history = _add_message(chat_history, "assistant", msg)
     ## Returning both updated state and what the Chatbot should display.
@@ -39,9 +39,9 @@ def get_clue(chat_history):
         resp = requests.get(f"{API_BASE}/clue")
         resp.raise_for_status()
         data = resp.json()
-        msg = f"💡 Clue: {data['clue']}"
+        msg = f"Clue: {data['clue']}"
     except Exception as e:
-        msg = f"⚠️ Error getting clue: {e}"
+        msg = f"Error getting clue: {e}"
 
     chat_history = _add_message(chat_history, "assistant", msg)
     return chat_history, chat_history
@@ -75,7 +75,7 @@ def make_guess(guess, chat_history):
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
-        chat_history = _add_message(chat_history, "assistant", f"⚠️ Error sending guess: {e}")
+        chat_history = _add_message(chat_history, "assistant", f"Error sending guess: {e}")
         return "", chat_history, chat_history
 
     feedback = data.get("feedback", "No feedback from server.")
@@ -85,7 +85,7 @@ def make_guess(guess, chat_history):
         chat_history = _add_message(
             chat_history,
             "assistant",
-            "🎉 Game over! Click 'Start New Game' to play again.",
+            "Game over! Click 'Start New Game' to play again.",
         )
 
     ## Clearing the input box after each guess.
@@ -105,15 +105,16 @@ def build_interface():
         )
 
         with gr.Row():
-            new_game_btn = gr.Button("Start New Game")
-            clue_btn = gr.Button("Get Clue")
+            with gr.Column(scale=1):
+                new_game_btn = gr.Button("Start New Game")
+                guess_input = gr.Textbox(
+                    label="Your guess",
+                    placeholder="e.g. Mauro Icardi",
+                )
 
-        with gr.Row():
-            guess_input = gr.Textbox(
-                label="Your guess (player name from the mini dataset)",
-                placeholder="e.g. Lionel Messi",
-            )
-            guess_btn = gr.Button("Submit Guess")
+            with gr.Column(scale=1):
+                clue_btn = gr.Button("Get Clue")
+                guess_btn = gr.Button("Submit Guess")
 
         ## Wire buttons
         new_game_btn.click(

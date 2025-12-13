@@ -107,7 +107,7 @@ def build_preprocessor(cat_cols, num_cols):
 
 def make_dataloaders(X, y, preprocessor):
     ## Fitting preprocessor on full X (train+val+test) to have a stable space,
-    ## then splittinh into train/val/test on labels.
+    ## then splitting into train/val/test on labels.
     X_proc = preprocessor.fit_transform(X)
 
     if hasattr(X_proc, "toarray"):

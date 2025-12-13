@@ -21,3 +21,11 @@ class MLP(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
+    
+    def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:
+        """Return hidden embedding (after 2nd ReLU), shape: (batch, hidden_dim)."""
+        x = self.net[0](x)
+        x = self.net[1](x)
+        x = self.net[2](x)
+        x = self.net[3](x)
+        return x

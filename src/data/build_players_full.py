@@ -290,6 +290,8 @@ def build_players_full():
     else:
         df["nation_region"] = "Other"
 
+    df["nationality"] = df["country_of_citizenship"].fillna("Unknown")
+
     ## Position group.
     if "position" in df.columns:
         df["position_group"] = df["position"].apply(map_position_group)
@@ -333,7 +335,7 @@ def build_players_full():
 
     ## And, I sort them by peak value and keep a manageable subset.
     df = df.sort_values("peak_value_eur", ascending=False)
-    df_top = df.head(500).reset_index(drop=True)
+    df_top = df.head(2000).reset_index(drop=True)
 
     ## These are the columns I care and keep for the final output.
     cols = [
@@ -343,6 +345,7 @@ def build_players_full():
         "age_band",
         "position_group",
         "nation_region",
+        "nationality",
         "league_region",
         "current_club_name",
         "current_club_domestic_competition_id",

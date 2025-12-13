@@ -4,11 +4,11 @@ from typing import Optional, Dict, Any
 from difflib import get_close_matches
 
 
-CSV_PATH = os.path.join("data", "raw", "players_mini.csv")
+CSV_PATH = os.path.join("data", "processed", "players_full.csv")
 
 
 def load_players_df() -> pd.DataFrame:
-    """Load the mini players dataset."""
+    """Load the processed full players dataset."""
     df = pd.read_csv(CSV_PATH)
     return df
 
@@ -26,7 +26,7 @@ def get_player_by_name(df: pd.DataFrame, name: str) -> Optional[pd.Series]:
     """
     Return a player row by name, with some fuzzy matching:
       1) exact (case-insensitive) match
-      2) substring match (e.g. 'messi' -> 'Lionel Messi')
+      2) substring match (e.g. 'icardi' -> 'Mauro Icardi')
       3) closest match by string similarity (e.g. 'Mbape' -> 'Kylian Mbappe')
     """
     if not name:
@@ -35,20 +35,20 @@ def get_player_by_name(df: pd.DataFrame, name: str) -> Optional[pd.Series]:
     name_norm = name.strip().lower()
 
     ## Exact (case-insensitive) match
-    row = df[df["name"].str.lower() == name_norm]
+    row = df[df["player_name"].str.lower() == name_norm]
     if not row.empty:
         return row.iloc[0]
 
     ## Substring match: guess inside full name
-    mask_contains = df["name"].str.lower().str.contains(name_norm)
+    mask_contains = df["player_name"].str.lower().str.contains(name_norm, na=False)
     if mask_contains.any():
         return df[mask_contains].iloc[0]
 
     ## Fuzzy match using difflib
-    all_names = df["name"].tolist()
+    all_names = df["player_name"].tolist()
     best = get_close_matches(name, all_names, n=1, cutoff=0.5)
     if best:
-        row = df[df["name"] == best[0]]
+        row = df[df["player_name"] == best[0]]
         if not row.empty:
             return row.iloc[0]
 
@@ -57,20 +57,20 @@ def get_player_by_name(df: pd.DataFrame, name: str) -> Optional[pd.Series]:
 
 def player_to_features_dict(row: pd.Series) -> Dict[str, Any]:
     """
-    Convert a player row into a dict with only the feature columns
-    used by the preprocessor.
+    Convert a player row into a dict used by the game and similarity.
+    Includes player_id, so I can use cached embeddings.
     """
-    feature_cols = [
-        "position_group",
-        "age_band",
-        "nation_region",
-        "league_region",
-        "current_club",
-        "goals_per90",
-        "assists_per90",
-        "minutes_per_season",
-        "peak_year",
-        "value_bin",
-        "style",
-    ]
-    return row[feature_cols].to_dict()
+    return {
+        "player_id": int(row["player_id"]),
+        "player_name": row.get("player_name", ""),
+
+        ## For clue fields.
+        "position_group": row.get("position_group", "Other"),
+        "age_band": row.get("age_band", "Unknown"),
+        "nation_region": row.get("nation_region", "Unknown"),
+        "league_region": row.get("league_region", "Unknown"),
+        "style": row.get("style", "all-rounder"),
+        "peak_year": row.get("peak_year", "Unknown"),
+        "value_bin": row.get("value_bin", "Unknown"),
+        "current_club_name": row.get("current_club_name", "Unknown Club"),
+    }
