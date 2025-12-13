@@ -26,6 +26,9 @@ mlflow.db-wal
 .venv/
 .env.local
 
+## Plotting outputs
+reports/
+
 ## OS junk
 .DS_Store
 Thumbs.db
